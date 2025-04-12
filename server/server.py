@@ -2,24 +2,47 @@ import socket
 import os
 import threading
 
-HOST = '0.0.0.0'
+HOST = 'localhost'
 PORT = 5001
-FILES_DIR = './files'
+SERVER_DIR = os.path.join(os.path.dirname(__file__), 'storage')
 
-os.makedirs(FILES_DIR, exist_ok=True)
+os.makedirs(SERVER_DIR, exist_ok=True)
 
-def handle_client(conn, addr):
-    print(f"[+] Conexão de {addr}")
-
+def handle_client(conn):
     try:
-        command = conn.recv(1024).decode().strip()
+        request = conn.recv(1024).decode().strip()
+        if not request:
+            conn.close()
+            return
 
-        if command.startswith("UPLOAD"):
-            _, filename = command.split(maxsplit=1)
-            filepath = os.path.join(FILES_DIR, filename)
+        parts = request.split()
+        command = parts[0]
 
-            conn.send("OK".encode())  # Confirma que vai começar a receber o arquivo
+        if command == 'LIST':
+            path = os.path.join(SERVER_DIR, *parts[1:]) if len(parts) > 1 else SERVER_DIR
+            if os.path.isdir(path):
+                files = os.listdir(path)
+                conn.send("\n".join(files).encode() if files else b"[vazio]")
+            else:
+                conn.send(b"Diretorio nao encontrado")
 
+        elif command == 'DELETE':
+            target = os.path.join(SERVER_DIR, *parts[1:])
+            if os.path.isfile(target):
+                os.remove(target)
+                conn.send(b"Arquivo removido")
+            elif os.path.isdir(target):
+                import shutil
+                shutil.rmtree(target)
+                conn.send(b"Diretorio removido com sucesso")
+            else:
+                conn.send(b"Nenhum arquivo ou diretorio encontrado")
+
+
+        elif command == 'UPLOAD':
+            filename = parts[1]
+            filepath = os.path.join(SERVER_DIR, filename)
+            conn.send(b"OK")
             with open(filepath, 'wb') as f:
                 while True:
                     data = conn.recv(1024)
@@ -27,37 +50,38 @@ def handle_client(conn, addr):
                         break
                     f.write(data)
 
-            print(f"[+] Arquivo {filename} recebido")
-
-        elif command.startswith("DOWNLOAD"):
-            _, filename = command.split(maxsplit=1)
-            filepath = os.path.join(FILES_DIR, filename)
-
-            if os.path.exists(filepath):
-                with open(filepath, 'rb') as f:
-                    conn.sendfile(f)
-                print(f"[+] Arquivo {filename} enviado")
+        elif command == 'DOWNLOAD':
+            target = os.path.join(SERVER_DIR, *parts[1:])
+            if os.path.isfile(target):
+                with open(target, 'rb') as f:
+                    while chunk := f.read(1024):
+                        conn.send(chunk)
+            elif os.path.isdir(target):
+                files = os.listdir(target)
+                if not files:
+                    conn.send(b"ERROR: Diretorio vazio")
+                else:
+                    for fname in files:
+                        conn.send(f"\n--- {fname} ---\n".encode())
+                        with open(os.path.join(target, fname), 'rb') as f:
+                            conn.send(f.read())
             else:
-                conn.send("ERROR: Arquivo não encontrado".encode())
+                conn.send(b"ERROR: Arquivo ou diretorio nao encontrado")
 
-        elif command.startswith("DELETE"):
-            _, filename = command.split(maxsplit=1)
-            filepath = os.path.join(FILES_DIR, filename)
+        elif command == 'MKDIR':
+            path = os.path.join(SERVER_DIR, *parts[1:])
+            os.makedirs(path, exist_ok=True)
+            conn.send(b"Diretorio criado")
 
-            if os.path.exists(filepath):
-                os.remove(filepath)
-                conn.send("Arquivo removido com sucesso.".encode())
-                print(f"[-] Arquivo {filename} removido")
-            else:
-                conn.send("ERROR: Arquivo não encontrado".encode())
+        elif command == 'TOUCH':
+            path = os.path.join(SERVER_DIR, *parts[1:])
+            open(path, 'a').close()
+            conn.send(b"Arquivo vazio criado")
 
-        elif command.strip() == "LIST":
-            files = os.listdir(FILES_DIR)
-            response = "\n".join(files) if files else "(vazio)"
-            conn.send(response.encode())
-
+        else:
+            conn.send(b"Comando invalido")
     except Exception as e:
-        print(f"[ERRO] {e}")
+        conn.send(f"Erro no servidor: {e}".encode())
     finally:
         conn.close()
 
@@ -65,11 +89,10 @@ def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST, PORT))
         s.listen()
-        print(f"[SERVIDOR] Aguardando conexões em {HOST}:{PORT}...")
-
+        print(f"[SERVIDOR] Online em {HOST}:{PORT}")
         while True:
-            conn, addr = s.accept()
-            threading.Thread(target=handle_client, args=(conn, addr)).start()
+            conn, _ = s.accept()
+            threading.Thread(target=handle_client, args=(conn,), daemon=True).start()
 
 if __name__ == "__main__":
     main()
