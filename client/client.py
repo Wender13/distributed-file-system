@@ -64,17 +64,20 @@ def touch(args):
     except Exception as e:
         print("[ERRO]", e)
 
-def visualizar_arquivo():
-    filename = input("Digite o nome do arquivo no servidor: ").strip()
-    client_socket.send(f"CAT {filename}".encode())
-    content = client_socket.recv(4096).decode()
-    print("\n📄 Conteúdo do arquivo:\n")
-    print(content)
+def visualizar_arquivo(args):
+    if not args:
+        print("[ERRO] Nome do arquivo nao informado")
+        return
+    try:
+        print("\n📄 Conteúdo do arquivo:\n")
+        print(proxy.cat_file(args[0]))
+    except Exception as e:
+        print("[ERRO]", e)
 
 
 def shell():
     print("Shell RPC do Sistema de Arquivos Distribuído")
-    print("Comandos: ls, rm, cp, get, mkdir, touch, exit")
+    print("Comandos: ls, cat, rm, cp, get, mkdir, touch, exit")
     while True:
         try:
             cmd = input("➜ ").strip()
