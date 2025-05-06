@@ -1,7 +1,7 @@
 import xmlrpc.client
 import os
 
-HOST = "http://192.168.83.60:5001/"  # IP do servidor (mude conforme necessário)
+HOST = "http://192.168.83.18:5001/"  # IP do servidor (mude conforme necessário)
 proxy = xmlrpc.client.ServerProxy(HOST, allow_none=True)
 
 def ls(args):
@@ -64,7 +64,7 @@ def touch(args):
     except Exception as e:
         print("[ERRO]", e)
 
-def visualizar_arquivo(args):
+def cat(args):
     if not args:
         print("[ERRO] Nome do arquivo nao informado")
         return
@@ -74,10 +74,21 @@ def visualizar_arquivo(args):
     except Exception as e:
         print("[ERRO]", e)
 
+def echo(args):
+    if not args:
+        print("[ERRO] Nome do arquivo não informado")
+        return
+    filename = args[0]
+    text = input("Digite o texto a ser adicionado: ")
+    try:
+        resposta = proxy.echo(filename, text)
+        print(resposta)
+    except Exception as e:
+        print("[ERRO]", e)
 
 def shell():
     print("Shell RPC do Sistema de Arquivos Distribuído")
-    print("Comandos: ls, cat, rm, cp, get, mkdir, touch, exit")
+    print("Comandos: ls, cat, rm, cp, get, mkdir, touch, echo, help, exit")
     while True:
         try:
             cmd = input("➜ ").strip()
@@ -93,7 +104,9 @@ def shell():
                 case "get": get(args)
                 case "mkdir": mkdir(args)
                 case "touch": touch(args)
-                case "cat": visualizar_arquivo(args)
+                case "cat": cat(args)
+                case "help": print("Comandos: ls, cat, rm, cp, get, mkdir, touch, help, exit")
+                case "echo": echo(args)
                 case "exit": print("Saindo..."); break
                 case _: print("Comando invalido.")
         except KeyboardInterrupt:

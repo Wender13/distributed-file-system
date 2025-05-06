@@ -51,8 +51,8 @@ class FileManager:
                 return Binary(f.read())
         return "Arquivo nao encontrado"
     
-    def cat_file(filename):
-        path = os.path.join("server/files", filename)
+    def cat_file(self, filename):
+        path = os.path.join(SERVER_DIR, filename)
         if not os.path.exists(path):
             return "ERRO: Arquivo não encontrado"
 
@@ -63,6 +63,30 @@ class FileManager:
             return "ERRO: Arquivo não é um arquivo de texto legível."
         except Exception as e:
             return f"ERRO ao ler arquivo: {e}"
+
+    def echo(args):
+        if not args:
+            print("[ERRO] Nome do arquivo não informado")
+            return
+        filename = args[0]
+        text = input("Digite o texto a ser adicionado: ")
+        try:
+            resposta = proxy.echo(filename, text)
+            print(resposta)
+        except Exception as e:
+            print("[ERRO]", e)
+
+    def echo(self, filename, text):
+        filepath = os.path.join(SERVER_DIR, filename)
+        if not os.path.exists(filepath):
+            return "ERRO: Arquivo não encontrado"
+
+        try:
+            with open(filepath, "a", encoding="utf-8") as f:
+                f.write(text + "\n")
+            return "OK: Texto adicionado com sucesso"
+        except Exception as e:
+            return f"ERRO ao escrever no arquivo: {e}"
 
 
 # Handler restrito ao caminho /
