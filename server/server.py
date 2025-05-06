@@ -50,6 +50,20 @@ class FileManager:
             with open(path, 'rb') as f:
                 return Binary(f.read())
         return "Arquivo nao encontrado"
+    
+    def cat_file(filename):
+        path = os.path.join("server/files", filename)
+        if not os.path.exists(path):
+            return "ERRO: Arquivo não encontrado"
+
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return f.read()
+        except UnicodeDecodeError:
+            return "ERRO: Arquivo não é um arquivo de texto legível."
+        except Exception as e:
+            return f"ERRO ao ler arquivo: {e}"
+
 
 # Handler restrito ao caminho /
 class RequestHandler(SimpleXMLRPCRequestHandler):

@@ -64,6 +64,14 @@ def touch(args):
     except Exception as e:
         print("[ERRO]", e)
 
+def visualizar_arquivo():
+    filename = input("Digite o nome do arquivo no servidor: ").strip()
+    client_socket.send(f"CAT {filename}".encode())
+    content = client_socket.recv(4096).decode()
+    print("\n📄 Conteúdo do arquivo:\n")
+    print(content)
+
+
 def shell():
     print("Shell RPC do Sistema de Arquivos Distribuído")
     print("Comandos: ls, rm, cp, get, mkdir, touch, exit")
@@ -82,6 +90,7 @@ def shell():
                 case "get": get(args)
                 case "mkdir": mkdir(args)
                 case "touch": touch(args)
+                case "cat": visualizar_arquivo(args)
                 case "exit": print("Saindo..."); break
                 case _: print("Comando invalido.")
         except KeyboardInterrupt:
