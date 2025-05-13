@@ -40,6 +40,7 @@ class FileManager:
 
     def upload(self, nome, dados):
         path = os.path.join(SERVER_DIR, nome)
+        os.makedirs(os.path.dirname(path), exist_ok=True)  # Garante que os diretórios existam
         with open(path, 'wb') as f:
             f.write(dados.data)
         return "Arquivo recebido com sucesso"
@@ -50,6 +51,7 @@ class FileManager:
             with open(path, 'rb') as f:
                 return Binary(f.read())
         return "Arquivo nao encontrado"
+
     
     def cat_file(self, filename):
         path = os.path.join(SERVER_DIR, filename)

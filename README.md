@@ -1,108 +1,155 @@
-# 🗃️ Sistema Distribuído de Arquivos em Python
+# 🧠 Shell RPC - Sistema de Arquivos Distribuído
 
-Este projeto implementa um **sistema simples de arquivos distribuídos** usando `Python` e `Sockets`. Ele permite que um cliente se conecte a um servidor para realizar as seguintes operações:
-
-- 📄 Listar arquivos disponíveis no servidor
-- ⬆️ Enviar arquivos (upload)
-- ⬇️ Baixar arquivos (download)
-- 🗑️ Remover arquivos do servidor
+Este shell permite interação remota com um servidor de arquivos via **XML-RPC**, simulando comandos comuns de sistemas Unix para manipulação de arquivos e diretórios de forma distribuída.
 
 ---
 
-## 📦 Estrutura do Projeto
+## 🚀 Como usar
 
+### 1. **Configuração**
+
+No início do script, configure o host do servidor XML-RPC:
+
+```python
+HOST = "http://localhost:5001/"
 ```
-Distributed file system/
-├── client/
-│   └── client.py        # Cliente interativo com menu
-├── server/
-│   ├── server.py        # Servidor que escuta conexões e executa comandos
-│   └── files/           # Pasta onde os arquivos enviados são armazenados
-└── README.md            # Este guia
-```
+
+Mude `localhost` e a porta conforme o endereço do seu servidor.
 
 ---
 
-## 🚀 Como iniciar
+## 📦 Comandos Disponíveis
 
-### 1. Inicie o servidor
+### `ls [CAMINHO]`
 
-No terminal:
+Lista arquivos e pastas de um diretório remoto.
+
+- **Sem argumentos**: lista o diretório raiz remoto.
+- **Com caminho**: lista o conteúdo de um diretório específico.
 
 ```bash
-cd server
-python3 server.py
+ls
+ls pasta/
 ```
-
-O servidor estará ouvindo na porta `5001`.
 
 ---
 
-### 2. Use o cliente
+### `rm CAMINHO1 CAMINHO2 ...`
 
-Em outro terminal:
+Remove um ou mais arquivos ou diretórios no servidor remoto.
 
 ```bash
-cd client
-python3 client.py
-```
-
-Será exibido um **menu interativo** com as opções.
-
----
-
-## 🧭 Menu interativo do cliente
-
-```
-========= MENU =========
-1. Listar arquivos no servidor
-2. Enviar arquivo para o servidor
-3. Baixar arquivo do servidor
-4. Remover arquivo do servidor
-0. Sair
+rm arquivo1.txt pasta/arquivo2.txt
 ```
 
 ---
 
-## 🧰 Funcionalidades
+### `cp ORIGEM DESTINO`
 
-### 1. Listar arquivos
+Copia arquivos entre o cliente e o servidor.
 
-Exibe todos os arquivos disponíveis no servidor.
+#### Upload (cliente ➝ servidor)
 
-### 2. Enviar arquivo
+```bash
+cp local:meuarquivo.txt remote:
+```
 
-- O cliente varre sua pasta `/home/seu_usuário` e lista os arquivos encontrados.
-- Você pode escolher pelo número exibido ou digitar o caminho completo.
-- O arquivo será enviado para a pasta `server/files/`.
+#### Download (servidor ➝ cliente)
 
-### 3. Baixar arquivo
+```bash
+cp remote:documento.pdf local:
+```
 
-- Solicita o nome do arquivo armazenado no servidor.
-- Você pode escolher salvar com o mesmo nome ou outro.
-
-### 4. Remover arquivo
-
-- Remove o arquivo especificado da pasta `server/files/`.
+> 📌 **Importante:** Se o destino for apenas `remote:` ou `local:` (sem caminho específico), o arquivo será enviado ou baixado diretamente para a **pasta principal (HOME)** do respectivo lado.
 
 ---
 
-## 📌 Requisitos
+### `mkdir NOME_DO_DIRETORIO`
 
-- Python 3.x
-- Sem bibliotecas externas (100% padrão)
+Cria um novo diretório remoto.
 
----
-
-## 🛠️ Melhorias futuras (ideias)
-
-- Suporte a múltiplos clientes concorrentes (threads)
-- Interface gráfica com Tkinter ou web (Flask)
-- Log de operações
-- Filtros por tipo de arquivo (.txt, .pdf etc.)
+```bash
+mkdir nova_pasta
+```
 
 ---
 
-## 📧 Autor
+### `touch NOME_DO_ARQUIVO`
 
-Feito por Wender Júnior – um projeto educacional de sistemas distribuídos com sockets.
+Cria um arquivo vazio no servidor remoto.
+
+```bash
+touch novo_arquivo.txt
+```
+
+---
+
+### `cat NOME_DO_ARQUIVO`
+
+Exibe o conteúdo de um arquivo remoto.
+
+```bash
+cat relatorio.txt
+```
+
+---
+
+### `echo NOME_DO_ARQUIVO`
+
+Adiciona texto a um arquivo remoto.
+
+```bash
+echo anotacoes.txt
+Digite o texto a ser adicionado: Revisar comandos RPC.
+```
+
+---
+
+### `help`
+
+Exibe os comandos disponíveis se não houver argumento, adicione um argumento (comando) para ver detalhes sobre o mesmo.
+
+---
+
+### `exit`
+
+Encerra o shell.
+
+---
+
+## 📝 Observações
+
+- **Prefixos obrigatórios em `cp`**:
+  - `local:` para caminhos locais (cliente).
+  - `remote:` para caminhos remotos (servidor).
+- **Arquivos baixados** terão seus diretórios criados automaticamente, se necessário.
+- **Arquivos enviados** devem existir localmente e não podem ser diretórios.
+
+---
+
+## 🛠️ Requisitos
+
+- Python 3
+- Servidor XML-RPC ativo escutando na porta configurada.
+
+---
+
+## 📂 Exemplo de Execução
+
+```bash
+➜ ls
+➜ mkdir arquivos
+➜ cp local:exemplo.txt remote:arquivos/
+➜ cp remote:arquivos/exemplo.txt local:copias/
+➜ cat remote:arquivos/exemplo.txt
+➜ echo remote:arquivos/exemplo.txt
+➜ exit
+```
+
+---
+
+## 📧 Suporte
+
+Para dúvidas ou sugestões, abra uma issue ou envie um pull request.
+
+---
