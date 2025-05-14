@@ -83,8 +83,8 @@ def cp(args):
             except Exception:
                 pass  # Ignora erro se já existir
 
-            nome_arquivo = os.path.basename(local_path)
-            remote_path = os.path.join(remote_path, nome_arquivo)
+        nome_arquivo = os.path.basename(local_path)
+        remote_path = os.path.join(remote_path, nome_arquivo)
 
         with open(local_path, "rb") as f:
             dados = f.read()
